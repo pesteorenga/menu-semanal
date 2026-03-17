@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Menú Semanal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f4f5f7;
+      --card: #ffffff;
+      --border: #e2e5ea;
+      --primary: #4f8ef7;
+      --primary-dark: #3a72d8;
+      --accent: #ff7043;
+      --today-bg: #eef4ff;
+      --today-border: #4f8ef7;
+      --text: #1a1d23;
+      --muted: #6b7280;
+      --lunch-dot: #22c55e;
+      --dinner-dot: #a855f7;
+      --shadow: 0 2px 8px rgba(0,0,0,.07);
+      --radius: 12px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -.3px;
+    }
+
+    header h1 span { color: var(--primary); }
+
+    .header-actions { display: flex; gap: 10px; align-items: center; }
+
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+    }
+
+    .tab-btn {
+      padding: 14px 20px;
+      font-size: .95rem;
+      font-weight: 600;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 3px solid transparent;
+      transition: color .2s, border-color .2s;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+
+    .btn:active { transform: scale(.97); }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline:hover { background: var(--today-bg); }
+
+    /* ── PANEL ── */
+    .panel { display: none; padding: 28px 24px; max-width: 960px; margin: 0 auto; }
+    .panel.active { display: block; }
+
+    /* ── WEEK GRID ── */
+    .week-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── DAY CARD ── */
+    .day-card {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: box-shadow .2s, transform .2s;
+    }
+
+    .day-card:hover {
+      box-shadow: 0 6px 20px rgba(0,0,0,.1);
+      transform: translateY(-2px);
+    }
+
+    .day-card.today {
+      border-color: var(--today-border);
+      background: var(--today-bg);
+    }
+
+    .day-header {
+      padding: 14px 18px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .day-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+
+    .today-badge {
+      display: none;
+      background: var(--primary);
+      color: #fff;
+      font-size: .72rem;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 99px;
+      letter-spacing: .4px;
+    }
+
+    .today .today-badge { display: inline-block; }
+
+    .day-divider { border: none; border-top: 1px solid var(--border); margin: 0 18px; }
+
+    .meal-list { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+    .meal-item { display: flex; gap: 10px; align-items: flex-start; }
+
+    .meal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .meal-dot.lunch { background: var(--lunch-dot); }
+    .meal-dot.dinner { background: var(--dinner-dot); }
+
+    .meal-info {}
+
+    .meal-type {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .meal-desc {
+      font-size: .9rem;
+      line-height: 1.45;
+      color: var(--text);
+    }
+
+    /* ── SHOPPING LIST ── */
+    .shopping-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .shopping-header h2 { font-size: 1.25rem; font-weight: 700; }
+
+    .shopping-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .shopping-section {
+      background: var(--card);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .shopping-section-header {
+      padding: 13px 16px;
+      font-size: .88rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-icon { font-size: 1.1rem; }
+
+    .shopping-items { padding: 10px 16px 14px; list-style: none; }
+
+    .shopping-items li {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 0;
+      font-size: .88rem;
+      border-bottom: 1px solid #f0f2f5;
+      cursor: pointer;
+      user-select: none;
+      transition: color .15s;
+    }
+
+    .shopping-items li:last-child { border-bottom: none; }
+
+    .shopping-items li.checked { color: var(--muted); text-decoration: line-through; }
+
+    .shopping-items li input[type="checkbox"] {
+      accent-color: var(--primary);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .clear-btn {
+      font-size: .78rem;
+      padding: 5px 12px;
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex;
+      gap: 18px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .82rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 500px) {
+      .panel { padding: 20px 14px; }
+      header { padding: 16px 14px; }
+      .tabs { padding: 0 14px; }
+      .tab-btn { padding: 12px 14px; font-size: .88rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Menú <span>Semanal</span></h1>
+  <div class="header-actions">
+    <button class="btn btn-primary" id="btn-today">Ir al día de hoy</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="menu">Menú semanal</button>
+  <button class="tab-btn" data-tab="shopping">Lista de la compra</button>
+</nav>
+
+<!-- MENÚ -->
+<section class="panel active" id="panel-menu">
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--lunch-dot)"></div> Comida</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dinner-dot)"></div> Cena</div>
+  </div>
+  <div class="week-grid" id="week-grid"></div>
+</section>
+
+<!-- LISTA DE LA COMPRA -->
+<section class="panel" id="panel-shopping">
+  <div class="shopping-header">
+    <h2>Lista de la compra</h2>
+    <button class="btn btn-outline clear-btn" id="btn-clear">Desmarcar todo</button>
+  </div>
+  <div class="shopping-grid" id="shopping-grid"></div>
+</section>
+
+<script>
+  /* ===== DATA ===== */
+  const menu = [
+    {
+      day: "Lunes",
+      lunch: "Ensalada de pollo con aguacate y tomate",
+      dinner: "Pasta integral con salsa de tomate y espinacas"
+    },
+    {
+      day: "Martes",
+      lunch: "Salmón a la plancha con quinoa y brócoli",
+      dinner: "Tortilla de patatas con lechuga y pepino"
+    },
+    {
+      day: "Miércoles",
+      lunch: "Pechuga de pavo con arroz integral y zanahorias",
+      dinner: "Sopa de lentejas con pan integral"
+    },
+    {
+      day: "Jueves",
+      lunch: "Filete de ternera con puré de calabaza y espárragos",
+      dinner: "Ensalada de atún con maíz y pimentón"
+    },
+    {
+      day: "Viernes",
+      lunch: "Paella de mariscos",
+      dinner: "Ensalada de quinoa con frutas y nueces"
+    },
+    {
+      day: "Sábado",
+      lunch: "Pollo al horno con patatas y guisantes",
+      dinner: "Ensalada de espinacas con frutos secos y balsámico"
+    },
+    {
+      day: "Domingo",
+      lunch: "Cocido madrileño",
+      dinner: "Ensalada de frutas con yogur y miel"
+    }
+  ];
+
+  const shoppingList = {
+    "Carnes y Pescados": {
+      icon: "🥩",
+      items: [
+        "Pechuga de pollo",
+        "Salmón fresco",
+        "Pechuga de pavo",
+        "Filete de ternera",
+        "Mariscos (gambas, mejillones, almejas)",
+        "Pollo entero para horno",
+        "Atún en lata",
+        "Chorizo y morcilla (cocido)"
+      ]
+    },
+    "Verduras y Hortalizas": {
+      icon: "🥦",
+      items: [
+        "Aguacate",
+        "Tomate",
+        "Espinacas",
+        "Brócoli",
+        "Lechuga",
+        "Pepino",
+        "Zanahorias",
+        "Espárragos",
+        "Patatas",
+        "Guisantes",
+        "Calabaza",
+        "Pimentón rojo",
+        "Maíz en lata",
+        "Garbanzos (cocido)",
+        "Cebolla y ajo"
+      ]
+    },
+    "Frutas": {
+      icon: "🍊",
+      items: [
+        "Frutas variadas (para ensalada)",
+        "Limón",
+        "Nueces",
+        "Frutos secos variados"
+      ]
+    },
+    "Lácteos y Huevos": {
+      icon: "🥛",
+      items: [
+        "Huevos (tortilla de patatas)",
+        "Yogur natural",
+        "Queso (opcional)"
+      ]
+    },
+    "Despensa": {
+      icon: "🫙",
+      items: [
+        "Pasta integral",
+        "Quinoa",
+        "Arroz integral",
+        "Arroz para paella",
+        "Lentejas",
+        "Pan integral",
+        "Miel",
+        "Vinagre balsámico",
+        "Salsa de tomate",
+        "Aceite de oliva virgen extra",
+        "Sal, pimienta y especias"
+      ]
+    }
+  };
+
+  /* ===== CURRENT DAY ===== */
+  // JS: 0=Sunday, 1=Monday ... 6=Saturday  →  map to our array index (Mon=0 … Sun=6)
+  function getTodayIndex() {
+    const jsDay = new Date().getDay(); // 0=Sun
+    return jsDay === 0 ? 6 : jsDay - 1;
+  }
+
+  /* ===== RENDER MENU ===== */
+  const grid = document.getElementById("week-grid");
+  const todayIdx = getTodayIndex();
+
+  menu.forEach((item, i) => {
+    const isToday = i === todayIdx;
+    const card = document.createElement("div");
+    card.className = "day-card" + (isToday ? " today" : "");
+    card.id = "day-" + i;
+    card.innerHTML = `
+      <div class="day-header">
+        <span class="day-name">${item.day}</span>
+        <span class="today-badge">Hoy</span>
+      </div>
+      <hr class="day-divider" />
+      <div class="meal-list">
+        <div class="meal-item">
+          <div class="meal-dot lunch"></div>
+          <div class="meal-info">
+            <div class="meal-type">Comida</div>
+            <div class="meal-desc">${item.lunch}</div>
+          </div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-dot dinner"></div>
+          <div class="meal-info">
+            <div class="meal-type">Cena</div>
+            <div class="meal-desc">${item.dinner}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  /* ===== RENDER SHOPPING ===== */
+  const shopGrid = document.getElementById("shopping-grid");
+
+  Object.entries(shoppingList).forEach(([section, data]) => {
+    const sec = document.createElement("div");
+    sec.className = "shopping-section";
+    const itemsHtml = data.items.map((item, idx) => {
+      const id = `chk-${section.replace(/\s+/g,"-")}-${idx}`;
+      return `<li>
+        <input type="checkbox" id="${id}" />
+        <label for="${id}">${item}</label>
+      </li>`;
+    }).join("");
+
+    sec.innerHTML = `
+      <div class="shopping-section-header">
+        <span class="section-icon">${data.icon}</span>
+        ${section}
+      </div>
+      <ul class="shopping-items">${itemsHtml}</ul>
+    `;
+    shopGrid.appendChild(sec);
+  });
+
+  // Toggle checked style on li
+  shopGrid.addEventListener("change", e => {
+    if (e.target.type === "checkbox") {
+      e.target.closest("li").classList.toggle("checked", e.target.checked);
+    }
+  });
+
+  // Clear all
+  document.getElementById("btn-clear").addEventListener("click", () => {
+    shopGrid.querySelectorAll("input[type=checkbox]").forEach(cb => {
+      cb.checked = false;
+      cb.closest("li").classList.remove("checked");
+    });
+  });
+
+  /* ===== TABS ===== */
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  /* ===== GO TO TODAY ===== */
+  document.getElementById("btn-today").addEventListener("click", () => {
+    // Switch to menu tab first
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    document.querySelector('[data-tab="menu"]').classList.add("active");
+    document.getElementById("panel-menu").classList.add("active");
+
+    const card = document.getElementById("day-" + todayIdx);
+    if (card) {
+      setTimeout(() => card.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+    }
+  });
+</script>
+</body>
+</html>
