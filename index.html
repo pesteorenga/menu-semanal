@@ -288,6 +288,37 @@
       border-radius: 50%;
     }
 
+    /* ── EDIT INLINE ── */
+    .meal-desc-wrap { position: relative; display: flex; align-items: flex-start; gap: 6px; }
+    .meal-desc { flex: 1; cursor: pointer; }
+    .meal-desc:hover { text-decoration: underline dotted var(--muted); }
+    .edit-icon { opacity: 0; font-size: .75rem; cursor: pointer; color: var(--muted); transition: opacity .15s; margin-top: 2px; }
+    .meal-desc-wrap:hover .edit-icon { opacity: 1; }
+    .edited-dot { width: 7px; height: 7px; background: #f97316; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .edit-input-wrap { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .edit-input { font-size: .9rem; padding: 6px 10px; border: 1.5px solid var(--primary); border-radius: 8px; width: 100%; }
+    .edit-btns { display: flex; gap: 6px; }
+    .edit-btns button { padding: 4px 10px; border: none; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; }
+    .btn-save { background: var(--primary); color: #fff; }
+    .btn-cancel { background: var(--border); color: var(--text); }
+
+    /* ── AI PANEL ── */
+    .ai-input-wrap { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .ai-input-wrap label { font-weight: 600; font-size: .95rem; display: block; margin-bottom: 10px; }
+    .ai-textarea { width: 100%; min-height: 90px; padding: 12px; border: 1.5px solid var(--border); border-radius: 8px; font-size: .9rem; font-family: inherit; resize: vertical; }
+    .ai-textarea:focus { outline: none; border-color: var(--primary); }
+    .ai-actions { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+    .ai-result { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); white-space: pre-wrap; line-height: 1.7; font-size: .9rem; display: none; }
+    .ai-result.visible { display: block; }
+    .ai-spinner { display: none; align-items: center; gap: 10px; color: var(--muted); font-size: .9rem; padding: 16px 0; }
+    .ai-spinner.visible { display: flex; }
+    .spinner-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: bounce 1s infinite; }
+    .spinner-dot:nth-child(2) { animation-delay: .15s; }
+    .spinner-dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
+    .ai-error { color: #ef4444; font-size: .88rem; margin-top: 8px; display: none; }
+    .ai-error.visible { display: block; }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 500px) {
       .panel { padding: 20px 14px; }
@@ -302,6 +333,7 @@
 <header>
   <h1>Menú <span>Semanal</span></h1>
   <div class="header-actions">
+  <button class="btn btn-outline" id="btn-reset" style="font-size:.82rem">↺ Resetear menú</button>
     <button class="btn btn-primary" id="btn-today">Ir al día de hoy</button>
   </div>
 </header>
@@ -309,6 +341,7 @@
 <nav class="tabs">
   <button class="tab-btn active" data-tab="menu">Menú semanal</button>
   <button class="tab-btn" data-tab="shopping">Lista de la compra</button>
+  <button class="tab-btn" data-tab="ai">🤖 Asistente IA</button>
 </nav>
 
 <!-- MENÚ -->
@@ -329,7 +362,23 @@
   <div class="shopping-grid" id="shopping-grid"></div>
 </section>
 
-<script>
+<!-- ASISTENTE IA -->
+<section class="panel" id="panel-ai">
+  <div class="ai-input-wrap">
+    <label>¿Qué tienes en la nevera?</label>
+    <textarea class="ai-textarea" id="ai-ingredients" placeholder="Ej: Tengo pollo, limón y ajo en la nevera..."></textarea>
+    <div class="ai-actions">
+      <button class="btn btn-primary" id="btn-recipe">🍳 Generar receta</button>
+      <button class="btn btn-outline" id="btn-suggest">💡 Sugerir sustitución para hoy</button>
+    </div>
+    <div class="ai-error" id="ai-error">❌ No se puede conectar a lemonade en localhost:8000. Asegúrate de que el servidor está activo.</div>
+  </div>
+  <div class="ai-spinner" id="ai-spinner">
+    <div class="spinner-dot"></div><div class="spinner-dot"></div><div class="spinner-dot"></div>
+    <span>Generando...</span>
+  </div>
+  <div class="ai-result" id="ai-result"></div>
+</section>
   /* ===== DATA ===== */
   const menu = [
     {
@@ -445,12 +494,36 @@
     return jsDay === 0 ? 6 : jsDay - 1;
   }
 
+  /* ===== EDITS STORAGE ===== */
+  const STORAGE_KEY = 'menu-edits';
+  function getEdits() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e) { return {}; } }
+  function saveEdit(dayIdx, type, value) {
+    const edits = getEdits();
+    if (!edits[dayIdx]) edits[dayIdx] = {};
+    edits[dayIdx][type] = value;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(edits));
+  }
+  function clearEdits() { localStorage.removeItem(STORAGE_KEY); }
+
   /* ===== RENDER MENU ===== */
   const grid = document.getElementById("week-grid");
   const todayIdx = getTodayIndex();
+  const edits = getEdits();
+
+  function makeMealHtml(text, dayIdx, type, isEdited) {
+    return `<div class="meal-desc-wrap" data-day="${dayIdx}" data-type="${type}">
+      ${isEdited ? '<div class="edited-dot" title="Editado"></div>' : ''}
+      <div class="meal-desc">${text}</div>
+      <span class="edit-icon" title="Editar">✏️</span>
+    </div>`;
+  }
 
   menu.forEach((item, i) => {
     const isToday = i === todayIdx;
+    const savedLunch = edits[i]?.lunch || item.lunch;
+    const savedDinner = edits[i]?.dinner || item.dinner;
+    const editedLunch = !!edits[i]?.lunch;
+    const editedDinner = !!edits[i]?.dinner;
     const card = document.createElement("div");
     card.className = "day-card" + (isToday ? " today" : "");
     card.id = "day-" + i;
@@ -465,19 +538,64 @@
           <div class="meal-dot lunch"></div>
           <div class="meal-info">
             <div class="meal-type">Comida</div>
-            <div class="meal-desc">${item.lunch}</div>
+            ${makeMealHtml(savedLunch, i, 'lunch', editedLunch)}
           </div>
         </div>
         <div class="meal-item">
           <div class="meal-dot dinner"></div>
           <div class="meal-info">
             <div class="meal-type">Cena</div>
-            <div class="meal-desc">${item.dinner}</div>
+            ${makeMealHtml(savedDinner, i, 'dinner', editedDinner)}
           </div>
         </div>
       </div>
     `;
     grid.appendChild(card);
+  });
+
+  /* ===== INLINE EDIT ===== */
+  grid.addEventListener('click', e => {
+    const wrap = e.target.closest('.meal-desc-wrap');
+    if (!wrap || wrap.querySelector('.edit-input-wrap')) return;
+    if (!e.target.closest('.meal-desc') && !e.target.closest('.edit-icon')) return;
+
+    const descEl = wrap.querySelector('.meal-desc');
+    const currentText = descEl.textContent;
+    const dayIdx = wrap.dataset.day;
+    const type = wrap.dataset.type;
+
+    wrap.innerHTML = `
+      <div class="edit-input-wrap">
+        <input class="edit-input" value="${currentText.replace(/"/g,'&quot;')}" />
+        <div class="edit-btns">
+          <button class="btn-save">✓ Guardar</button>
+          <button class="btn-cancel">✗ Cancelar</button>
+        </div>
+      </div>`;
+
+    const input = wrap.querySelector('.edit-input');
+    input.focus();
+    input.select();
+
+    wrap.querySelector('.btn-save').addEventListener('click', () => {
+      const newText = input.value.trim() || currentText;
+      const isEdited = newText !== menu[dayIdx][type];
+      saveEdit(dayIdx, type, newText);
+      wrap.outerHTML = makeMealHtml(newText, dayIdx, type, isEdited);
+    });
+
+    wrap.querySelector('.btn-cancel').addEventListener('click', () => {
+      const isEdited = !!getEdits()[dayIdx]?.[type];
+      wrap.outerHTML = makeMealHtml(currentText, dayIdx, type, isEdited);
+    });
+  });
+
+  /* ===== RESET ===== */
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    if (confirm('¿Resetear el menú a los valores originales?')) {
+      clearEdits();
+      location.reload();
+    }
   });
 
   /* ===== RENDER SHOPPING ===== */
@@ -529,7 +647,75 @@
     });
   });
 
-  /* ===== GO TO TODAY ===== */
+  /* ===== ASISTENTE IA ===== */
+  async function callLemonade(messages) {
+    const res = await fetch('http://localhost:8000/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer lemonade-local' },
+      body: JSON.stringify({
+        model: 'Devstral-Small-2507-GGUF',
+        messages,
+        max_tokens: 600
+      })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }
+
+  function showAiLoading(show) {
+    document.getElementById('ai-spinner').classList.toggle('visible', show);
+    document.getElementById('ai-result').classList.toggle('visible', false);
+    document.getElementById('ai-error').classList.toggle('visible', false);
+  }
+
+  function showAiResult(text) {
+    const el = document.getElementById('ai-result');
+    el.textContent = text;
+    el.classList.add('visible');
+  }
+
+  function showAiError() {
+    document.getElementById('ai-error').classList.add('visible');
+  }
+
+  document.getElementById('btn-recipe').addEventListener('click', async () => {
+    const ingredients = document.getElementById('ai-ingredients').value.trim();
+    if (!ingredients) { alert('Escribe primero qué tienes en la nevera.'); return; }
+    showAiLoading(true);
+    try {
+      const result = await callLemonade([
+        { role: 'system', content: 'Eres un chef creativo. Genera recetas en español aprovechando los ingredientes disponibles para evitar desperdicios. Formato: nombre del plato, ingredientes adicionales mínimos necesarios, y pasos de preparación.' },
+        { role: 'user', content: 'Tengo estos ingredientes: ' + ingredients }
+      ]);
+      showAiLoading(false);
+      showAiResult(result);
+    } catch(e) {
+      showAiLoading(false);
+      showAiError();
+    }
+  });
+
+  document.getElementById('btn-suggest').addEventListener('click', async () => {
+    const todayMenu = menu[todayIdx];
+    const editsToday = getEdits()[todayIdx] || {};
+    const lunch = editsToday.lunch || todayMenu.lunch;
+    const dinner = editsToday.dinner || todayMenu.dinner;
+    showAiLoading(true);
+    try {
+      const result = await callLemonade([
+        { role: 'system', content: 'Eres un chef creativo. Sugiere alternativas de platos saludables y equilibrados en español.' },
+        { role: 'user', content: `Hoy tenía planeado: Comida: ${lunch} / Cena: ${dinner}. Sugiere una alternativa diferente para cada uno, con opciones variadas y nutritivas.` }
+      ]);
+      showAiLoading(false);
+      showAiResult(result);
+    } catch(e) {
+      showAiLoading(false);
+      showAiError();
+    }
+  });
+
+
   document.getElementById("btn-today").addEventListener("click", () => {
     // Switch to menu tab first
     document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
