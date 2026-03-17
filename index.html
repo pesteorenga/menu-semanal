@@ -6,446 +6,113 @@
   <title>Menú Semanal</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #f4f5f7;
-      --card: #ffffff;
-      --border: #e2e5ea;
-      --primary: #4f8ef7;
-      --primary-dark: #3a72d8;
-      --accent: #ff7043;
-      --today-bg: #eef4ff;
-      --today-border: #4f8ef7;
-      --text: #1a1d23;
-      --muted: #6b7280;
-      --lunch-dot: #22c55e;
-      --dinner-dot: #a855f7;
-      --shadow: 0 2px 8px rgba(0,0,0,.07);
-      --radius: 12px;
+      --bg: #f4f5f7; --card: #ffffff; --border: #e2e5ea;
+      --primary: #4f8ef7; --primary-dark: #3a72d8;
+      --today-bg: #eef4ff; --today-border: #4f8ef7;
+      --text: #1a1d23; --muted: #6b7280;
+      --lunch-dot: #22c55e; --dinner-dot: #a855f7;
+      --shadow: 0 2px 8px rgba(0,0,0,.07); --radius: 12px;
     }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 60px; }
 
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 0 0 60px;
-    }
-
-    /* ── HEADER ── */
-    header {
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: var(--shadow);
-    }
-
-    header h1 {
-      font-size: 1.4rem;
-      font-weight: 700;
-      letter-spacing: -.3px;
-    }
-
+    /* HEADER */
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+    header h1 { font-size: 1.3rem; font-weight: 700; }
     header h1 span { color: var(--primary); }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-    .header-actions { display: flex; gap: 10px; align-items: center; }
+    /* TABS */
+    .tabs { display: flex; background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 24px; overflow-x: auto; }
+    .tab-btn { padding: 13px 18px; font-size: .9rem; font-weight: 600; border: none; background: none; cursor: pointer; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; transition: color .2s, border-color .2s; }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
-    /* ── TABS ── */
-    .tabs {
-      display: flex;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px;
-    }
-
-    .tab-btn {
-      padding: 14px 20px;
-      font-size: .95rem;
-      font-weight: 600;
-      border: none;
-      background: none;
-      cursor: pointer;
-      color: var(--muted);
-      border-bottom: 3px solid transparent;
-      transition: color .2s, border-color .2s;
-    }
-
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    /* ── BUTTONS ── */
-    .btn {
-      padding: 8px 18px;
-      border: none;
-      border-radius: 8px;
-      font-size: .88rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .15s, transform .1s;
-    }
-
-    .btn:active { transform: scale(.97); }
-
+    /* BUTTONS */
+    .btn { padding: 7px 16px; border: none; border-radius: 8px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: background .15s; }
     .btn-primary { background: var(--primary); color: #fff; }
     .btn-primary:hover { background: var(--primary-dark); }
-    .btn-outline {
-      background: transparent;
-      color: var(--primary);
-      border: 2px solid var(--primary);
-    }
+    .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
     .btn-outline:hover { background: var(--today-bg); }
-    .btn-ghost {
-      background: transparent;
-      color: var(--muted);
-      border: 1.5px solid var(--border);
-      font-size: .82rem;
-    }
-    .btn-ghost:hover { background: var(--bg); color: var(--text); }
+    .btn-danger { background: transparent; color: #ef4444; border: 2px solid #ef4444; }
+    .btn-danger:hover { background: #fef2f2; }
 
-    /* ── PANEL ── */
-    .panel { display: none; padding: 28px 24px; max-width: 960px; margin: 0 auto; }
+    /* PANELS */
+    .panel { display: none; padding: 24px; max-width: 960px; margin: 0 auto; }
     .panel.active { display: block; }
 
-    /* ── WEEK GRID ── */
-    .week-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 16px;
-    }
+    /* WEEK GRID */
+    .week-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 14px; }
 
-    /* ── DAY CARD ── */
-    .day-card {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      transition: box-shadow .2s, transform .2s;
-    }
-
-    .day-card:hover {
-      box-shadow: 0 6px 20px rgba(0,0,0,.1);
-      transform: translateY(-2px);
-    }
-
-    .day-card.today {
-      border-color: var(--today-border);
-      background: var(--today-bg);
-    }
-
-    .day-header {
-      padding: 14px 18px 10px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .day-name {
-      font-size: 1.05rem;
-      font-weight: 700;
-      text-transform: capitalize;
-    }
-
-    .today-badge {
-      display: none;
-      background: var(--primary);
-      color: #fff;
-      font-size: .72rem;
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: 99px;
-      letter-spacing: .4px;
-    }
-
+    /* DAY CARD */
+    .day-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); transition: box-shadow .2s, transform .2s; }
+    .day-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.1); transform: translateY(-2px); }
+    .day-card.today { border-color: var(--today-border); background: var(--today-bg); }
+    .day-header { padding: 13px 16px 9px; display: flex; align-items: center; justify-content: space-between; }
+    .day-name { font-size: 1rem; font-weight: 700; }
+    .today-badge { display: none; background: var(--primary); color: #fff; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 99px; }
     .today .today-badge { display: inline-block; }
-
-    .day-divider { border: none; border-top: 1px solid var(--border); margin: 0 18px; }
-
-    .meal-list { padding: 14px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
-
-    .meal-item { display: flex; gap: 10px; align-items: flex-start; }
-
-    .meal-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-top: 5px;
-      flex-shrink: 0;
-    }
-
+    .day-divider { border: none; border-top: 1px solid var(--border); margin: 0 16px; }
+    .meal-list { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 11px; }
+    .meal-item { display: flex; gap: 9px; align-items: flex-start; }
+    .meal-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
     .meal-dot.lunch { background: var(--lunch-dot); }
     .meal-dot.dinner { background: var(--dinner-dot); }
+    .meal-info { flex: 1; min-width: 0; }
+    .meal-type { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 2px; }
 
-    .meal-info {}
+    /* INLINE EDIT */
+    .meal-desc-wrap { display: flex; align-items: flex-start; gap: 5px; cursor: pointer; }
+    .meal-desc-wrap:hover .meal-desc { text-decoration: underline dotted var(--muted); }
+    .meal-desc { font-size: .88rem; line-height: 1.4; flex: 1; }
+    .edit-icon { font-size: .7rem; opacity: 0; color: var(--muted); transition: opacity .15s; margin-top: 3px; flex-shrink: 0; }
+    .meal-desc-wrap:hover .edit-icon { opacity: 1; }
+    .edited-dot { width: 6px; height: 6px; background: #f97316; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+    .edit-form { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .edit-input { font-size: .88rem; padding: 5px 9px; border: 1.5px solid var(--primary); border-radius: 7px; width: 100%; font-family: inherit; }
+    .edit-input:focus { outline: none; }
+    .edit-btns { display: flex; gap: 5px; }
+    .edit-btns button { padding: 3px 9px; border: none; border-radius: 6px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+    .btn-save { background: var(--primary); color: #fff; }
+    .btn-cancel { background: var(--border); color: var(--text); }
 
-    .meal-type {
-      font-size: .72rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      color: var(--muted);
-      margin-bottom: 2px;
-    }
+    /* LEGEND */
+    .legend { display: flex; gap: 16px; margin-bottom: 18px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: .8rem; color: var(--muted); font-weight: 600; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
-    .meal-desc {
-      font-size: .9rem;
-      line-height: 1.45;
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-
-    .meal-text { flex: 1; min-width: 0; }
-
-    .edit-icon {
-      opacity: 0;
-      font-size: .75rem;
-      transition: opacity .15s;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-
-    .meal-desc:hover .edit-icon { opacity: 1; }
-
-    .edited-dot {
-      color: var(--accent);
-      font-size: .55rem;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-
-    .meal-desc.editing { cursor: default; align-items: center; }
-
-    .edit-input {
-      font-size: .88rem;
-      font-family: inherit;
-      border: 1.5px solid var(--primary);
-      border-radius: 6px;
-      padding: 3px 7px;
-      outline: none;
-      flex: 1;
-      min-width: 120px;
-      color: var(--text);
-    }
-
-    .edit-actions { display: flex; gap: 4px; flex-shrink: 0; }
-
-    .edit-confirm, .edit-cancel {
-      border: none;
-      border-radius: 5px;
-      width: 24px;
-      height: 24px;
-      font-size: .82rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      line-height: 1;
-    }
-
-    .edit-confirm { background: #22c55e; color: #fff; }
-    .edit-confirm:hover { background: #16a34a; }
-    .edit-cancel { background: #ef4444; color: #fff; }
-    .edit-cancel:hover { background: #dc2626; }
-
-    /* ── SHOPPING LIST ── */
-    .shopping-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .shopping-header h2 { font-size: 1.25rem; font-weight: 700; }
-
-    .shopping-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .shopping-section {
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      box-shadow: var(--shadow);
-    }
-
-    .shopping-section-header {
-      padding: 13px 16px;
-      font-size: .88rem;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .section-icon { font-size: 1.1rem; }
-
-    .shopping-items { padding: 10px 16px 14px; list-style: none; }
-
-    .shopping-items li {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      padding: 6px 0;
-      font-size: .88rem;
-      border-bottom: 1px solid #f0f2f5;
-      cursor: pointer;
-      user-select: none;
-      transition: color .15s;
-    }
-
+    /* SHOPPING */
+    .shopping-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+    .shopping-header h2 { font-size: 1.2rem; font-weight: 700; }
+    .shopping-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+    .shopping-section { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .shopping-section-header { padding: 11px 14px; font-size: .85rem; font-weight: 700; display: flex; align-items: center; gap: 7px; border-bottom: 1px solid var(--border); }
+    .shopping-items { padding: 8px 14px 12px; list-style: none; }
+    .shopping-items li { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: .85rem; border-bottom: 1px solid #f0f2f5; cursor: pointer; user-select: none; }
     .shopping-items li:last-child { border-bottom: none; }
-
     .shopping-items li.checked { color: var(--muted); text-decoration: line-through; }
+    .shopping-items li input[type="checkbox"] { accent-color: var(--primary); width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; }
 
-    .shopping-items li input[type="checkbox"] {
-      accent-color: var(--primary);
-      width: 15px;
-      height: 15px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
+    /* AI PANEL */
+    .ai-card { background: var(--card); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .ai-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+    .ai-textarea { width: 100%; min-height: 80px; padding: 10px; border: 1.5px solid var(--border); border-radius: 8px; font-size: .88rem; font-family: inherit; resize: vertical; }
+    .ai-textarea:focus { outline: none; border-color: var(--primary); }
+    .ai-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .ai-spinner { display: none; align-items: center; gap: 8px; color: var(--muted); font-size: .88rem; padding: 14px 0; }
+    .ai-spinner.show { display: flex; }
+    .dot { width: 7px; height: 7px; background: var(--primary); border-radius: 50%; animation: pulse 1s infinite; }
+    .dot:nth-child(2) { animation-delay: .2s; }
+    .dot:nth-child(3) { animation-delay: .4s; }
+    @keyframes pulse { 0%,80%,100%{transform:scale(.4)} 40%{transform:scale(1)} }
+    .ai-result { background: #f8faff; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; white-space: pre-wrap; line-height: 1.7; font-size: .88rem; display: none; }
+    .ai-result.show { display: block; }
+    .ai-error { color: #ef4444; font-size: .85rem; margin-top: 8px; display: none; }
+    .ai-error.show { display: block; }
 
-    .clear-btn {
-      font-size: .78rem;
-      padding: 5px 12px;
-    }
-
-    /* ── LEGEND ── */
-    .legend {
-      display: flex;
-      gap: 18px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: .82rem;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    .legend-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-    }
-
-    /* ── AI PANEL ── */
-    .ai-panel-content { max-width: 640px; }
-
-    .ai-panel-content h2 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .ai-desc {
-      font-size: .88rem;
-      color: var(--muted);
-      margin-bottom: 18px;
-    }
-
-    .ai-textarea {
-      width: 100%;
-      padding: 12px 14px;
-      font-size: .9rem;
-      font-family: inherit;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      resize: vertical;
-      min-height: 100px;
-      outline: none;
-      transition: border-color .2s;
-      color: var(--text);
-      background: var(--card);
-    }
-
-    .ai-textarea:focus { border-color: var(--primary); }
-
-    .ai-generate-btn { margin-top: 12px; }
-
-    .ai-spinner {
-      margin-top: 20px;
-      color: var(--muted);
-      font-size: .88rem;
-      display: none;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .ai-spinner.visible { display: flex; }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .spinner-icon {
-      width: 18px;
-      height: 18px;
-      border: 2.5px solid var(--border);
-      border-top-color: var(--primary);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      flex-shrink: 0;
-    }
-
-    .ai-result {
-      display: none;
-      margin-top: 20px;
-      background: var(--card);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 20px;
-      font-size: .9rem;
-      line-height: 1.7;
-      white-space: pre-wrap;
-      box-shadow: var(--shadow);
-    }
-
-    .ai-result.visible { display: block; }
-
-    .ai-error {
-      display: none;
-      margin-top: 16px;
-      background: #fef2f2;
-      border: 1.5px solid #fca5a5;
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      color: #dc2626;
-      font-size: .88rem;
-      line-height: 1.5;
-    }
-
-    .ai-error.visible { display: block; }
-
-    /* ── RESPONSIVE ── */
     @media (max-width: 500px) {
-      .panel { padding: 20px 14px; }
-      header { padding: 16px 14px; }
-      .tabs { padding: 0 14px; }
-      .tab-btn { padding: 12px 14px; font-size: .88rem; }
+      .panel { padding: 16px 12px; }
+      header { padding: 12px; }
+      .tabs { padding: 0 12px; }
     }
   </style>
 </head>
@@ -454,22 +121,23 @@
 <header>
   <h1>Menú <span>Semanal</span></h1>
   <div class="header-actions">
-    <button class="btn btn-ghost" id="btn-reset">Resetear menú</button>
-    <button class="btn btn-primary" id="btn-today">Ir al día de hoy</button>
+    <button class="btn btn-danger" id="btn-reset">↺ Resetear</button>
+    <button class="btn btn-primary" id="btn-today">Hoy</button>
   </div>
 </header>
 
 <nav class="tabs">
-  <button class="tab-btn active" data-tab="menu">Menú semanal</button>
-  <button class="tab-btn" data-tab="shopping">Lista de la compra</button>
+  <button class="tab-btn active" data-tab="menu">📅 Menú semanal</button>
+  <button class="tab-btn" data-tab="shopping">🛒 Lista de la compra</button>
   <button class="tab-btn" data-tab="ai">🤖 Asistente IA</button>
 </nav>
 
 <!-- MENÚ -->
 <section class="panel active" id="panel-menu">
   <div class="legend">
-    <div class="legend-item"><div class="legend-dot" style="background:var(--lunch-dot)"></div> Comida</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--dinner-dot)"></div> Cena</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--lunch-dot)"></div>Comida</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--dinner-dot)"></div>Cena</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Editado</div>
   </div>
   <div class="week-grid" id="week-grid"></div>
 </section>
@@ -478,194 +146,210 @@
 <section class="panel" id="panel-shopping">
   <div class="shopping-header">
     <h2>Lista de la compra</h2>
-    <button class="btn btn-outline clear-btn" id="btn-clear">Desmarcar todo</button>
+    <button class="btn btn-outline" id="btn-clear">Desmarcar todo</button>
   </div>
   <div class="shopping-grid" id="shopping-grid"></div>
 </section>
 
 <!-- ASISTENTE IA -->
 <section class="panel" id="panel-ai">
-  <div class="ai-panel-content">
-    <h2>Asistente IA</h2>
-    <p class="ai-desc">Dime qué ingredientes tienes y te sugiero una receta para aprovecharlos.</p>
-    <textarea
-      class="ai-textarea"
-      id="ai-ingredients"
-      placeholder="Ej: Tengo pollo, limón y ajo en la nevera..."
-      rows="4"
-    ></textarea>
-    <button class="btn btn-primary ai-generate-btn" id="btn-generate">Generar receta</button>
-    <div class="ai-spinner" id="ai-spinner">
-      <div class="spinner-icon"></div>
-      <span>Generando receta...</span>
+  <div class="ai-card">
+    <h3>🍳 Generar receta con lo que tienes</h3>
+    <textarea class="ai-textarea" id="ai-ingredients" placeholder="Ej: Tengo pollo, limón y ajo en la nevera..."></textarea>
+    <div class="ai-actions">
+      <button class="btn btn-primary" id="btn-recipe">Generar receta</button>
+      <button class="btn btn-outline" id="btn-suggest">💡 Sugerir alternativa para hoy</button>
     </div>
-    <div class="ai-error" id="ai-error"></div>
-    <div class="ai-result" id="ai-result"></div>
+    <div class="ai-error" id="ai-error">❌ No se puede conectar a lemonade en localhost:8000. Asegúrate de que el servidor está activo.</div>
   </div>
+  <div class="ai-spinner" id="ai-spinner">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <span>Generando respuesta...</span>
+  </div>
+  <div class="ai-result" id="ai-result"></div>
 </section>
 
 <script>
-  /* ===== DATA ===== */
-  const menu = [
-    {
-      day: "Lunes",
-      lunch: "Ensalada de pollo con aguacate y tomate",
-      dinner: "Pasta integral con salsa de tomate y espinacas"
-    },
-    {
-      day: "Martes",
-      lunch: "Salmón a la plancha con quinoa y brócoli",
-      dinner: "Tortilla de patatas con lechuga y pepino"
-    },
-    {
-      day: "Miércoles",
-      lunch: "Pechuga de pavo con arroz integral y zanahorias",
-      dinner: "Sopa de lentejas con pan integral"
-    },
-    {
-      day: "Jueves",
-      lunch: "Filete de ternera con puré de calabaza y espárragos",
-      dinner: "Ensalada de atún con maíz y pimentón"
-    },
-    {
-      day: "Viernes",
-      lunch: "Paella de mariscos",
-      dinner: "Ensalada de quinoa con frutas y nueces"
-    },
-    {
-      day: "Sábado",
-      lunch: "Pollo al horno con patatas y guisantes",
-      dinner: "Ensalada de espinacas con frutos secos y balsámico"
-    },
-    {
-      day: "Domingo",
-      lunch: "Cocido madrileño",
-      dinner: "Ensalada de frutas con yogur y miel"
-    }
+  /* ── DATA ── */
+  const MENU_DEFAULT = [
+    { day: "Lunes",     lunch: "Ensalada de pollo con aguacate y tomate",        dinner: "Pasta integral con salsa de tomate y espinacas" },
+    { day: "Martes",    lunch: "Salmón a la plancha con quinoa y brócoli",        dinner: "Tortilla de patatas con lechuga y pepino" },
+    { day: "Miércoles", lunch: "Pechuga de pavo con arroz integral y zanahorias", dinner: "Sopa de lentejas con pan integral" },
+    { day: "Jueves",    lunch: "Filete de ternera con puré de calabaza y espárragos", dinner: "Ensalada de atún con maíz y pimentón" },
+    { day: "Viernes",   lunch: "Paella de mariscos",                               dinner: "Ensalada de quinoa con frutas y nueces" },
+    { day: "Sábado",    lunch: "Pollo al horno con patatas y guisantes",            dinner: "Ensalada de espinacas con frutos secos y balsámico" },
+    { day: "Domingo",   lunch: "Cocido madrileño",                                 dinner: "Ensalada de frutas con yogur y miel" }
   ];
 
-  const shoppingList = {
-    "Carnes y Pescados": {
-      icon: "🥩",
-      items: [
-        "Pechuga de pollo",
-        "Salmón fresco",
-        "Pechuga de pavo",
-        "Filete de ternera",
-        "Mariscos (gambas, mejillones, almejas)",
-        "Pollo entero para horno",
-        "Atún en lata",
-        "Chorizo y morcilla (cocido)"
-      ]
-    },
-    "Verduras y Hortalizas": {
-      icon: "🥦",
-      items: [
-        "Aguacate",
-        "Tomate",
-        "Espinacas",
-        "Brócoli",
-        "Lechuga",
-        "Pepino",
-        "Zanahorias",
-        "Espárragos",
-        "Patatas",
-        "Guisantes",
-        "Calabaza",
-        "Pimentón rojo",
-        "Maíz en lata",
-        "Garbanzos (cocido)",
-        "Cebolla y ajo"
-      ]
-    },
-    "Frutas": {
-      icon: "🍊",
-      items: [
-        "Frutas variadas (para ensalada)",
-        "Limón",
-        "Nueces",
-        "Frutos secos variados"
-      ]
-    },
-    "Lácteos y Huevos": {
-      icon: "🥛",
-      items: [
-        "Huevos (tortilla de patatas)",
-        "Yogur natural",
-        "Queso (opcional)"
-      ]
-    },
-    "Despensa": {
-      icon: "🫙",
-      items: [
-        "Pasta integral",
-        "Quinoa",
-        "Arroz integral",
-        "Arroz para paella",
-        "Lentejas",
-        "Pan integral",
-        "Miel",
-        "Vinagre balsámico",
-        "Salsa de tomate",
-        "Aceite de oliva virgen extra",
-        "Sal, pimienta y especias"
-      ]
+  const SHOPPING = {
+    "🥩 Carnes y Pescados": ["Pechuga de pollo","Salmón fresco","Pechuga de pavo","Filete de ternera","Mariscos (gambas, mejillones)","Pollo entero","Atún en lata","Chorizo y morcilla (cocido)"],
+    "🥦 Verduras":          ["Aguacate","Tomate","Espinacas","Brócoli","Lechuga","Pepino","Zanahorias","Espárragos","Patatas","Guisantes","Calabaza","Pimentón rojo","Maíz en lata","Garbanzos","Cebolla y ajo"],
+    "🍊 Frutas":            ["Frutas variadas","Limón","Nueces","Frutos secos"],
+    "🥛 Lácteos y Huevos":  ["Huevos","Yogur natural","Queso (opcional)"],
+    "🫙 Despensa":          ["Pasta integral","Quinoa","Arroz integral","Arroz para paella","Lentejas","Pan integral","Miel","Vinagre balsámico","Salsa de tomate","Aceite de oliva","Sal y especias"]
+  };
+
+  /* ── STORAGE ── */
+  const EDIT_KEY = 'menu-edits';
+  const getEdits = () => { try { return JSON.parse(localStorage.getItem(EDIT_KEY)) || {}; } catch(e) { return {}; } };
+  const saveEdit = (i, type, val) => { const e = getEdits(); if (!e[i]) e[i] = {}; e[i][type] = val; localStorage.setItem(EDIT_KEY, JSON.stringify(e)); };
+
+  /* ── TODAY ── */
+  const todayIdx = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
+
+  /* ── RENDER MENU ── */
+  const weekGrid = document.getElementById('week-grid');
+  const edits = getEdits();
+
+  function mealWrap(text, i, type) {
+    const edited = !!edits[i]?.[type];
+    return `<div class="meal-desc-wrap" data-i="${i}" data-type="${type}">
+      ${edited ? '<div class="edited-dot"></div>' : ''}
+      <span class="meal-desc">${text}</span>
+      <span class="edit-icon">✏️</span>
+    </div>`;
+  }
+
+  MENU_DEFAULT.forEach((item, i) => {
+    const lunch  = edits[i]?.lunch  || item.lunch;
+    const dinner = edits[i]?.dinner || item.dinner;
+    const card = document.createElement('div');
+    card.className = 'day-card' + (i === todayIdx ? ' today' : '');
+    card.id = 'day-' + i;
+    card.innerHTML = `
+      <div class="day-header">
+        <span class="day-name">${item.day}</span>
+        <span class="today-badge">Hoy</span>
+      </div>
+      <hr class="day-divider">
+      <div class="meal-list">
+        <div class="meal-item">
+          <div class="meal-dot lunch"></div>
+          <div class="meal-info"><div class="meal-type">Comida</div>${mealWrap(lunch, i, 'lunch')}</div>
+        </div>
+        <div class="meal-item">
+          <div class="meal-dot dinner"></div>
+          <div class="meal-info"><div class="meal-type">Cena</div>${mealWrap(dinner, i, 'dinner')}</div>
+        </div>
+      </div>`;
+    weekGrid.appendChild(card);
+  });
+
+  /* ── INLINE EDIT ── */
+  weekGrid.addEventListener('click', e => {
+    const wrap = e.target.closest('.meal-desc-wrap');
+    if (!wrap || wrap.querySelector('.edit-form')) return;
+    const i = wrap.dataset.i, type = wrap.dataset.type;
+    const current = wrap.querySelector('.meal-desc').textContent;
+    wrap.innerHTML = `<div class="edit-form">
+      <input class="edit-input" value="${current.replace(/"/g,'&quot;')}">
+      <div class="edit-btns">
+        <button class="btn-save">✓ Guardar</button>
+        <button class="btn-cancel">✗ Cancelar</button>
+      </div>
+    </div>`;
+    const input = wrap.querySelector('.edit-input');
+    input.focus(); input.select();
+    wrap.querySelector('.btn-save').onclick = () => {
+      const val = input.value.trim() || current;
+      saveEdit(i, type, val);
+      wrap.outerHTML = mealWrap(val, i, type);
+    };
+    wrap.querySelector('.btn-cancel').onclick = () => {
+      wrap.outerHTML = mealWrap(current, i, type);
+    };
+  });
+
+  /* ── RESET ── */
+  document.getElementById('btn-reset').onclick = () => {
+    if (confirm('¿Resetear el menú a los valores originales?')) {
+      localStorage.removeItem(EDIT_KEY);
+      location.reload();
     }
   };
 
-  /* ===== EDITS STORAGE ===== */
-  const EDITS_KEY = "menu-edits";
+  /* ── SHOPPING ── */
+  const shopGrid = document.getElementById('shopping-grid');
+  Object.entries(SHOPPING).forEach(([section, items]) => {
+    const div = document.createElement('div');
+    div.className = 'shopping-section';
+    div.innerHTML = `<div class="shopping-section-header">${section}</div>
+      <ul class="shopping-items">${items.map((item, idx) => {
+        const id = 'chk-' + section.replace(/\W/g,'') + idx;
+        return `<li><input type="checkbox" id="${id}"><label for="${id}">${item}</label></li>`;
+      }).join('')}</ul>`;
+    shopGrid.appendChild(div);
+  });
+  shopGrid.addEventListener('change', e => {
+    if (e.target.type === 'checkbox') e.target.closest('li').classList.toggle('checked', e.target.checked);
+  });
+  document.getElementById('btn-clear').onclick = () => {
+    shopGrid.querySelectorAll('input[type=checkbox]').forEach(cb => { cb.checked = false; cb.closest('li').classList.remove('checked'); });
+  };
 
-  function loadEdits() {
-    try { return JSON.parse(localStorage.getItem(EDITS_KEY)) || {}; }
-    catch { return {}; }
+  /* ── TABS ── */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    };
+  });
+
+  /* ── TODAY BTN ── */
+  document.getElementById('btn-today').onclick = () => {
+    document.querySelector('[data-tab="menu"]').click();
+    setTimeout(() => document.getElementById('day-' + todayIdx)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
+  };
+
+  /* ── ASISTENTE IA ── */
+  async function callLemonade(messages) {
+    const res = await fetch('http://localhost:8000/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer lemonade-local' },
+      body: JSON.stringify({ model: 'Devstral-Small-2507-GGUF', messages, max_tokens: 600 })
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return (await res.json()).choices[0].message.content;
   }
 
-  function saveEdit(dayIdx, mealType, value) {
-    const edits = loadEdits();
-    edits[`${dayIdx}-${mealType}`] = value;
-    localStorage.setItem(EDITS_KEY, JSON.stringify(edits));
+  function aiLoading(show) {
+    document.getElementById('ai-spinner').classList.toggle('show', show);
+    document.getElementById('ai-result').classList.remove('show');
+    document.getElementById('ai-error').classList.remove('show');
   }
 
-  function clearEdits() {
-    localStorage.removeItem(EDITS_KEY);
-  }
+  document.getElementById('btn-recipe').onclick = async () => {
+    const ing = document.getElementById('ai-ingredients').value.trim();
+    if (!ing) return alert('Escribe primero qué tienes en la nevera.');
+    aiLoading(true);
+    try {
+      const r = await callLemonade([
+        { role: 'system', content: 'Eres un chef creativo. Genera recetas en español aprovechando los ingredientes disponibles para evitar desperdicios. Formato: nombre del plato, ingredientes adicionales mínimos necesarios, pasos de preparación.' },
+        { role: 'user', content: 'Tengo estos ingredientes: ' + ing }
+      ]);
+      aiLoading(false);
+      const el = document.getElementById('ai-result');
+      el.textContent = r; el.classList.add('show');
+    } catch(e) { aiLoading(false); document.getElementById('ai-error').classList.add('show'); }
+  };
 
-  /* ===== CURRENT DAY ===== */
-  function getTodayIndex() {
-    const jsDay = new Date().getDay();
-    return jsDay === 0 ? 6 : jsDay - 1;
-  }
-
-  /* ===== INLINE EDIT LOGIC ===== */
-  function buildMealDesc(dayIdx, mealType, text, isEdited) {
-    const div = document.createElement("div");
-    div.className = "meal-desc";
-    div.dataset.day = dayIdx;
-    div.dataset.meal = mealType;
-
-    const dot = document.createElement("span");
-    dot.className = "edited-dot";
-    dot.textContent = "●";
-    dot.style.display = isEdited ? "inline" : "none";
-
-    const span = document.createElement("span");
-    span.className = "meal-text";
-    span.textContent = text;
-
-    const icon = document.createElement("span");
-    icon.className = "edit-icon";
-    icon.textContent = "✏️";
-
-    div.appendChild(dot);
-    div.appendChild(span);
-    div.appendChild(icon);
-
-    div.addEventListener("click", handleEditClick);
-    return div;
-  }
-
-  function handleEditClick(e) {
-    const desc = e.currentTarget;
-    if (desc.classList.contains("editing")) return;
-    desc.classList.add("editing
+  document.getElementById('btn-suggest').onclick = async () => {
+    const e = getEdits();
+    const lunch  = e[todayIdx]?.lunch  || MENU_DEFAULT[todayIdx].lunch;
+    const dinner = e[todayIdx]?.dinner || MENU_DEFAULT[todayIdx].dinner;
+    aiLoading(true);
+    try {
+      const r = await callLemonade([
+        { role: 'system', content: 'Eres un chef. Sugiere alternativas de platos saludables en español.' },
+        { role: 'user', content: `Hoy tenía: Comida: ${lunch} / Cena: ${dinner}. Sugiere una alternativa diferente para cada uno.` }
+      ]);
+      aiLoading(false);
+      const el = document.getElementById('ai-result');
+      el.textContent = r; el.classList.add('show');
+    } catch(e) { aiLoading(false); document.getElementById('ai-error').classList.add('show'); }
+  };
+</script>
+</body>
+</html>
